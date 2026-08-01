@@ -67,7 +67,8 @@ class Animal(db.Model):
     )
     formulacoes = db.relationship(
         "FormulacaoRacao", backref="animal", cascade="all, delete-orphan",
-        order_by="desc(FormulacaoRacao.id)",
+        order_by="desc(FormulacaoRacao.id)",  # ID cresce a cada cálculo novo — mais confiável
+        # que ordenar só pela data (dois cálculos no mesmo dia empatariam na data).
     )
     custos = db.relationship("CustoAdicional", backref="animal", cascade="all, delete-orphan")
 
@@ -240,7 +241,7 @@ class Ingrediente(db.Model):
     inclusao_min_pct = db.Column(db.Float, default=0)   # limite mín. na mistura (0-100)
     inclusao_max_pct = db.Column(db.Float, default=100)  # limite máx. na mistura (0-100)
     restrito_a_especies = db.Column(db.String(120))  # ex: "bovino,ovino,caprino" — vazio = todas. Usado p/ ureia (só ruminantes).
-    observacao_uso = db.Column(db.String(300))  # avisos de manejo, ex: "NPN: fornecer com adaptação gradual, nunca em jejum"
+    observacao_uso = db.Column(db.Text)  # avisos de manejo — sem limite de tamanho
     fonte_bibliografica = db.Column(db.String(200))
     disponivel = db.Column(db.Boolean, default=True)
 
