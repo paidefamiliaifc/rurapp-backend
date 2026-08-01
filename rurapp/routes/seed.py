@@ -13,6 +13,22 @@ from seed_data import INGREDIENTES_EXEMPLO, EXIGENCIAS_EXEMPLO
 seed_bp = Blueprint("seed", __name__, url_prefix="/api")
 
 
+@seed_bp.route("/reset-db", methods=["GET"])
+def resetar_banco():
+    """
+    Apaga e recria TODAS as tabelas do zero, seguindo a versão mais
+    recente de models.py. Útil quando a estrutura do banco muda
+    (ex: um campo de texto precisou ficar maior) — o create_all()
+    normal NÃO altera tabelas que já existem, só cria as que faltam.
+
+    ⚠️ Isso apaga todos os dados salvos (animais, pesagens etc.).
+    Rode /api/seed de novo depois pra repopular ingredientes/exigências.
+    """
+    db.drop_all()
+    db.create_all()
+    return jsonify({"ok": True, "mensagem": "Banco recriado do zero. Agora visite /api/seed pra popular os dados de exemplo."})
+
+
 @seed_bp.route("/seed", methods=["GET"])
 def rodar_seed():
     criados_ing = 0
