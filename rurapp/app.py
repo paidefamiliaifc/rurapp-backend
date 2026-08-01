@@ -22,6 +22,7 @@ from routes.manejo import manejo_bp
 from routes.racao import racao_bp
 from routes.lotes import lotes_bp
 from routes.custos import custos_bp
+from routes.seed import seed_bp
 
 
 def create_app():
@@ -46,6 +47,7 @@ def create_app():
     app.register_blueprint(racao_bp)
     app.register_blueprint(lotes_bp)
     app.register_blueprint(custos_bp)
+    app.register_blueprint(seed_bp)
 
     @app.route("/api/health")
     def health_check():
