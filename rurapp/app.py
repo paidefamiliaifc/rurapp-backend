@@ -1,18 +1,20 @@
 """
 app.py — Ponto de entrada do backend Flask
 
-Como rodar:
+Como rodar LOCAL (no seu computador):
     pip install -r requirements.txt
     python app.py
 
-O servidor sobe em http://localhost:5000 com CORS liberado, pronto
-pra ser consumido pelo front React (rodando em outra porta, ex: 5173/3000).
+Como rodar HOSPEDADO (ex: Render, Railway): a plataforma define as
+variáveis de ambiente DATABASE_URL (banco Postgres) e PORT automaticamente,
+e usa o Procfile pra iniciar com gunicorn. Nada a fazer manualmente.
 
-Na primeira execução, cria o arquivo rurapp.db (SQLite) automaticamente.
+Na primeira execução local, cria o arquivo rurapp.db (SQLite) automaticamente.
 Rode `python seed_exigencias.py` depois pra popular as tabelas de
 exigência nutricional (Embrapa/NRC) e alguns ingredientes de exemplo.
 """
 
+import os
 from flask import Flask, jsonify
 from flask_cors import CORS
 from models import db
@@ -24,10 +26,19 @@ from routes.custos import custos_bp
 
 def create_app():
     app = Flask(__name__)
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///rurapp.db"
+
+    # Se existir DATABASE_URL (fornecida pela hospedagem, ex: Render), usa
+    # o banco Postgres hospedado. Senão, usa o SQLite local de sempre.
+    database_url = os.environ.get("DATABASE_URL", "sqlite:///rurapp.db")
+    # Render entrega a URL no formato antigo "postgres://" — o SQLAlchemy
+    # moderno exige "postgresql://". Corrige isso automaticamente.
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    CORS(app)  # libera acesso do front React (outra origem/porta)
+    CORS(app)  # libera acesso do front end (outra origem/porta/domínio)
 
     db.init_app(app)
 
@@ -46,6 +57,8 @@ def create_app():
     return app
 
 
+app = create_app()  # nível do módulo — necessário pro gunicorn achar "app:app" quando hospedado
+
 if __name__ == "__main__":
-    app = create_app()
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    porta = int(os.environ.get("PORT", 5000))
+    app.run(debug=True, host="0.0.0.0", port=porta)
